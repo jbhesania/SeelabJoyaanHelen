@@ -1,3 +1,6 @@
+'''
+This file runs retraining normally but also gets an accuracy on the testing data after each retraining to give us an idea of the changes during retraining. It is not the correct computing file.
+'''
 
 # coding: utf-8
 
@@ -72,28 +75,27 @@ def createBins(BIN_NUM, arr, i):
 
 #if guessed wrong, subtract from wrong hypervector, add to correct hypervector
 #repeat until accepted accuracy
-def validate(classHV, testArr, levelHV, featureHV, numSubClasses):
+def retrain(classHV, testArr, levelHV, featureHV, numSubClasses):
     numCol = len(testArr[0,:])  
     for i in range (0, len(testArr)):
         queryHV = testArr[i, 0:(numCol - 1)]
         cosVals = cosineSimilarity(classHV, queryHV)
-        #loops until is correct class
-        while (findAccuracy(cosVals, testArr, numCol, i, numSubClasses) == 0):
+        x = findAccuracy(cosVals, testArr, numCol, i, numSubClasses)
+        if x is 0:
             maxVal = int(np.argmax(cosVals))
             classNum = int(maxVal / numSubClasses)
             subClassNum = int(maxVal % numSubClasses)
             
             #delete queryHV from incorrect classHV
             #classHV[classNum][subClassNum] = classHV[classNum][subClassNum] - queryHV
-            classHV[classNum][subClassNum] = classHV[classNum][subClassNum] - queryHV
+            classHV[classNum][:] = classHV[classNum][:] - queryHV
 
+            
             #add queryHV to correct classHV
             #find subclassHV with highest cosine similarity
             trueClass = int(testArr[i, numCol-1])
             trueSub = int(np.argmax(cosVals[trueClass]))
-            classHV[trueClass, trueSub] = classHV[trueClass, trueSub] + queryHV
-
-            cosVals = cosineSimilarity(classHV, queryHV)
+            classHV[trueClass, :] = classHV[trueClass, :] + queryHV
             
                  
     return classHV
@@ -176,16 +178,16 @@ def unpickle(fileName):
 
 trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
 testingFile = 'ISOLETPickles/ISOLET_test.pickle'
-#trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
-#testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
+#trainingFile = 'PAMPA2Pickles/PAMPA2_train.pickle'
+#testingFile = 'PAMPA2Pickles/PAMPA2_test.pickle'
 #trainingFile = 'UCIHARPickles/sa_train.pickle'
 #testingFile = 'UCIHARPickles/sa_test.pickle'
 #trainingFile = 'moons/moons_2048_train.txt'
 #testingFile = 'moons/moons_2048_test.txt'
 #trainingFile = "blob_train.txt"
 #testingFile = "blob_test.txt"
-#trainingFile = "FACEPickles/face_train.pickle"
-#testingFile = "FACEPickles/face_test.pickle"
+#trainingFile = "FACEPickles/train.pickle"
+#testingFile = "FACEPickles/test.pickle"
 #input()
 
 
@@ -194,10 +196,10 @@ testingFile = 'ISOLETPickles/ISOLET_test.pickle'
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 1
+numSubClasses = 2
 BIN_NUM = 20
 FLIP_NUM = 50
-numValidation = 15
+numValidation = 50
 
 
 #the feature hypervector
@@ -316,7 +318,7 @@ print(len(trainQueryHV[0]))
 # In[ ]:
 
 Y = np.zeros([numValidation])
-print("Validations out of " + str(numValidation))
+print("Retrainings out of " + str(numValidation))
 for k in range(numValidation):
     
     accuracy = np.zeros([testArrNumRows])
@@ -329,9 +331,9 @@ for k in range(numValidation):
         
     Y[k] = np.sum(accuracy)/float(len(testOverallArr))
    
-    classHV = validate(classHV, trainQueryHV, levelHV, featureHV, numSubClasses) 
+    classHV = retrain(classHV, trainQueryHV, levelHV, featureHV, numSubClasses) 
 
-    #classHV = (classHV +  validate(classHV, trainQueryHV, levelHV, featureHV, numSubClasses))/2
+    #classHV = (classHV +  retrain(classHV, trainQueryHV, levelHV, featureHV, numSubClasses))/2
     
     print(k)
 

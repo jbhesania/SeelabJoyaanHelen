@@ -1,3 +1,7 @@
+'''
+This model uses a different form of retraining and also implements subclasses.
+The retraining runs through each training sample and only moves to the next one once it gets classified correctly. In other words, it has an inner loop that changed the classHV as much as is necessary for it to be classified correctly.
+'''
 
 # coding: utf-8
 
@@ -77,22 +81,23 @@ def validate(classHV, testArr, levelHV, featureHV, numSubClasses):
     for i in range (0, len(testArr)):
         queryHV = testArr[i, 0:(numCol - 1)]
         cosVals = cosineSimilarity(classHV, queryHV)
-        x = findAccuracy(cosVals, testArr, numCol, i, numSubClasses)
-        if x is 0:
+        #loops until is correct class
+        while (findAccuracy(cosVals, testArr, numCol, i, numSubClasses) == 0):
             maxVal = int(np.argmax(cosVals))
             classNum = int(maxVal / numSubClasses)
             subClassNum = int(maxVal % numSubClasses)
             
             #delete queryHV from incorrect classHV
             #classHV[classNum][subClassNum] = classHV[classNum][subClassNum] - queryHV
-            classHV[classNum][:] = classHV[classNum][:] - queryHV
+            classHV[classNum][subClassNum] = classHV[classNum][subClassNum] - queryHV
 
-            
             #add queryHV to correct classHV
             #find subclassHV with highest cosine similarity
             trueClass = int(testArr[i, numCol-1])
             trueSub = int(np.argmax(cosVals[trueClass]))
-            classHV[trueClass, :] = classHV[trueClass, :] + queryHV
+            classHV[trueClass, trueSub] = classHV[trueClass, trueSub] + queryHV
+
+            cosVals = cosineSimilarity(classHV, queryHV)
             
                  
     return classHV
@@ -175,16 +180,16 @@ def unpickle(fileName):
 
 trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
 testingFile = 'ISOLETPickles/ISOLET_test.pickle'
-#trainingFile = 'PAMPA2Pickles/PAMPA2_train.pickle'
-#testingFile = 'PAMPA2Pickles/PAMPA2_test.pickle'
+#trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
+#testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
 #trainingFile = 'UCIHARPickles/sa_train.pickle'
 #testingFile = 'UCIHARPickles/sa_test.pickle'
 #trainingFile = 'moons/moons_2048_train.txt'
 #testingFile = 'moons/moons_2048_test.txt'
 #trainingFile = "blob_train.txt"
 #testingFile = "blob_test.txt"
-#trainingFile = "FACEPickles/train.pickle"
-#testingFile = "FACEPickles/test.pickle"
+#trainingFile = "FACEPickles/face_train.pickle"
+#testingFile = "FACEPickles/face_test.pickle"
 #input()
 
 
@@ -193,10 +198,10 @@ testingFile = 'ISOLETPickles/ISOLET_test.pickle'
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 2
+numSubClasses = 1
 BIN_NUM = 20
 FLIP_NUM = 50
-numValidation = 50
+numValidation = 15
 
 
 #the feature hypervector

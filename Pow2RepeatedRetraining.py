@@ -1,10 +1,9 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[17]:
 
 import numpy as np
-#np.set_printoptions(threshold=np.nan)
 import random
 import pickle
 from numpy import linalg as li
@@ -12,9 +11,9 @@ import time
 import scipy
 import scipy.cluster
 import sklearn.preprocessing
+from scipy.special import xlogy
 
-
-# In[2]:
+# In[18]:
 
 # genRandomHV(): generates random hypervector
 # D: number of dimensions
@@ -65,38 +64,36 @@ def createBins(BIN_NUM, arr, i):
     maxValue, minValue = findMinMax(arr[:, i])
     bins = []
     for j in range(BIN_NUM):
-            bins = np.append(bins, minValue + ((maxValue-minValue)/BIN_NUM)*j)
+            bins = np.append(bins, minValue + (float(maxValue-minValue)/BIN_NUM)*j)
     return bins
 
 
-# In[3]:
+# In[30]:
 
 #if guessed wrong, subtract from wrong hypervector, add to correct hypervector
 #repeat until accepted accuracy
 def validate(classHV, testArr, levelHV, featureHV, numSubClasses):
     numCol = len(testArr[0,:])  
     for i in range (0, len(testArr)):
-        queryHV = np.zeros([10000])
-        for j in range(0, numCol - 1):
-            levelOne = levelHV[j, int(testArr[i, j])]
-            productOne = levelOne * featureHV[j]
-            queryHV = queryHV + productOne
+        queryHV = testArr[i, 0:(numCol - 1)]
         cosVals = cosineSimilarity(classHV, queryHV)
-        x = findAccuracy(cosVals, testArr, numCol, i, numSubClasses)
-        if x is 0:
+        #loops until is correct class
+        while (findAccuracy(cosVals, testArr, numCol, i, numSubClasses) == 0):
             maxVal = int(np.argmax(cosVals))
             classNum = int(maxVal / numSubClasses)
             subClassNum = int(maxVal % numSubClasses)
             
             #delete queryHV from incorrect classHV
-            #             #classHV[classNum][subClassNum] = classHV[classNum][subClassNum] - queryHV
-            classHV[classNum][:] = classHV[classNum][:] - queryHV
+            #classHV[classNum][subClassNum] = classHV[classNum][subClassNum] - queryHV
+            classHV[classNum][subClassNum] = classHV[classNum][subClassNum] - queryHV
 
-            
             #add queryHV to correct classHV
             #find subclassHV with highest cosine similarity
             trueClass = int(testArr[i, numCol-1])
-            classHV[trueClass, :] = classHV[trueClass, :] + queryHV
+            trueSub = int(np.argmax(cosVals[trueClass]))
+            classHV[trueClass, trueSub] = classHV[trueClass, trueSub] + queryHV
+
+            cosVals = cosineSimilarity(classHV, queryHV)
             
                  
     return classHV
@@ -147,7 +144,7 @@ def findAccuracy(cosVals, testOverallArr, testArrNumCols, i, numSubClasses):
         return 0
 
 
-# In[4]:
+# In[20]:
 
 #uses kmeans method on given array, which will all be of the same class
 #adds hypervectors to destined class hypervector
@@ -160,7 +157,7 @@ def kmeans(array, numSubClasses):
     return label
 
 
-# In[5]:
+# In[21]:
 
 def unpickle(fileName):
     with open(fileName, 'rb') as handle:
@@ -174,34 +171,47 @@ def unpickle(fileName):
         
     return numFeatures, numClasses, arr
 
+#Change all values in array to powers of 2
+def changePowers(array): 
+  sign = np.sign(array)
+  array = np.absolute(array)
+  array = xlogy(np.sign(array), array) / np.log(2)
+  array = np.round(array)
+  #creates a new array with same shape as array, all filled with powers of 2
+  a = np.full(array.shape, 2)
+  array = np.power(a, array)
+  array = array*sign
 
-# In[6]:
+  return array
 
-#trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
-#testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
+
+# In[22]:
+
+#trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
+#testingFile = 'ISOLETPickles/ISOLET_test.pickle'
 #trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
 #testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
-trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
-testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
-#trainingFile = 'dataset/moons/moons_2048_train.txt'
-#testingFile = 'dataset/moons/moons_2048_test.txt'
+#trainingFile = 'UCIHARPickles/sa_train.pickle'
+#testingFile = 'UCIHARPickles/sa_test.pickle'
+#trainingFile = 'moons/moons_2048_train.txt'
+#testingFile = 'moons/moons_2048_test.txt'
 #trainingFile = "blob_train.txt"
 #testingFile = "blob_test.txt"
-#trainingFile = "dataset/face/train.pickle"
-#testingFile = "dataset/face/test.pickle"
+trainingFile = "FACEPickles/face_train.pickle"
+testingFile = "FACEPickles/face_test.pickle"
 #input()
 
 
-# In[7]:
+# In[23]:
 
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-
-numSubClasses = 2
+numSubClasses = 1
 BIN_NUM = 20
 FLIP_NUM = 50
 numValidation = 50
+
 
 #the feature hypervector
 featureHV = genFeatureHV(F)
@@ -211,10 +221,10 @@ classHV = genClassHV(C, numSubClasses)
 arrNumRows = len(overallArr)
 arrNumCols = len(overallArr[0,:])
 
-print("Successful unpickle")
+print "Successful unpickle with ", numSubClasses, " subclasses and ", numValidation, " retraining."
 
 
-# In[8]:
+# In[24]:
 
 #READING THE DATA
 
@@ -231,10 +241,9 @@ overallArr = overallArr.astype(int)
 print("Done encoding")
 
 
-# In[9]:
+# In[25]:
 
 #CREATING THE CLASS HVs
-
 for i in range(0, len(classHV)):
     print(i)
     #grabs all HVs that are of a specific class
@@ -247,50 +256,25 @@ for i in range(0, len(classHV)):
     #creates subclass hypervectors for that specific class
     for j in range(0, len(arr)):
         for k in range(0, numCols - 1):
-            #arr[j,k] grabs which bin the HV is in, since the array was digitized earlier
+            #arr[j,k] grabs which bin the HV is in, since the array was digitized earlier    
             levelOne = levelHV[k, arr[j, k]]
             productOne = levelOne * featureHV[k]
             
             #classHV[class, subclass]
             classHV[i, label[j]] = classHV[i, label[j]] + productOne 
-
+classHV = classHV / 100
+classHV = changePowers(classHV)    
 print("Done creating classHV")
 
 
-# In[10]:
-
-################## creating class HVs ####################
-
-# goes through each line and adds the product of feature and value to the hypervector class
-#for i in range(0, arrNumRows):
-#    for j in range(0, arrNumCols - 1):
-#        levelOne = levelHV[j, overallArr[i, j]]
-#        productOne = levelOne * featureHV[j]
-#        classHV[overallArr[i, arrNumCols - 1]] = classHV[overallArr[i, arrNumCols - 1]] + productOne 
-
-#print("Done creating classHV")
-
-
-# In[11]:
-
-print("Validations out of " + str(numValidation))
-for i in range(0, numValidation):
-    print(i, end=' ')
-    classHV = (classHV + validate(classHV, copyOverallArr, levelHV, featureHV, numSubClasses))/2
-print("Done with validation")
-
-
-#classHV = validate(classHV, copyOverallArr, levelHV, featureHV)
-
-
-# In[ ]:
+# In[26]:
 
 ################## reading the testing data ####################
 
 # starting to test data, get data into overalltestarray, with fourth column of 0 for false and 1 for true
 #number of features, classes, and array of all values
 testF, testC, testOverallArr = unpickle(testingFile)
-
+    
 testArrNumRows = len(testOverallArr)
 testArrNumCols = len(testOverallArr[0,:])
 
@@ -305,24 +289,69 @@ testOverallArr = testOverallArr.astype(int)
 print("Done reading test data")
 
 
+# In[27]:
+
+#Creates all query HV for training dataset and testing dataset
+
+trainQueryHV = np.empty([len(overallArr), 10000])
+for i in range(0, len(overallArr)):
+  queryHV = np.zeros([10000])
+  for j in range(0, arrNumCols - 1):
+    levelOne = levelHV[j, overallArr[i, j]]
+    productOne = levelOne * featureHV[j]
+    queryHV = queryHV + productOne
+
+  trainQueryHV[i] = queryHV
+
+trainQueryHV = changePowers(trainQueryHV)
+
+testQueryHV = np.zeros([testArrNumRows, 10000])
+# encodes each test HV
+for i in range(0, testArrNumRows):
+  queryHV = np.zeros([10000])
+  for j in range(0, testArrNumCols - 1):
+    levelOne = levelHV[j, testOverallArr[i, j]]
+    productOne = levelOne * featureHV[j]
+    queryHV = queryHV + productOne
+    
+  testQueryHV[i] = queryHV
+
+testQueryHV = changePowers(testQueryHV)
+
+print("Done creating encoded train/test HV")
+
+
+# In[28]:
+
+a = overallArr[:, arrNumCols - 1].reshape(-1, 1)
+print(a.shape)
+trainQueryHV = np.c_[trainQueryHV, a]
+
+print(len(trainQueryHV[0]))
+
+
 # In[ ]:
 
-accuracy = np.zeros([testArrNumRows])
-
-# goes through each line and adds the product of feature and value to the hypervector class
-for i in range(0, testArrNumRows):
-    queryHV = np.zeros([10000])
-    for j in range(0, testArrNumCols - 1):
-        levelOne = levelHV[j, testOverallArr[i, j]]
-        productOne = levelOne * featureHV[j]
-        queryHV = queryHV + productOne 
-     
+Y = np.zeros([numValidation])
+print("Validations out of " + str(numValidation))
+for k in range(numValidation):
+    
+    accuracy = np.zeros([testArrNumRows])
+    
     #calculate the cosine similarity for each of the class HVs
-    cosVals = cosineSimilarity(classHV, queryHV)
-    #if the smallest cosines class is the actual class
-    accuracy[i] = findAccuracy(cosVals, testOverallArr, testArrNumCols, i, numSubClasses)
+    for i in range(0, len(testQueryHV)):
+      cosVals = cosineSimilarity(classHV, testQueryHV[i])
+        #if the smallest cosines class is the actual class
+      accuracy[i] = findAccuracy(cosVals, testOverallArr, testArrNumCols, i, numSubClasses)
+        
+    Y[k] = np.sum(accuracy)/float(len(testOverallArr))
+   
+    classHV = validate(classHV, trainQueryHV, levelHV, featureHV, numSubClasses) 
+    classHV = changePowers(classHV)
+    #classHV = (classHV +  validate(classHV, trainQueryHV, levelHV, featureHV, numSubClasses))/2
+    
+    print(k)
 
-print("Done finding accuracy")
 
 
 # In[ ]:
@@ -330,6 +359,13 @@ print("Done finding accuracy")
 print(np.sum(accuracy), len(accuracy))
 print(np.sum(accuracy)/len(testOverallArr))
 print(len(testOverallArr))
+print(Y)
+
+# In[ ]:
+
+#import matplotlib.pyplot as plt
+#plt.plot(Y)
+#plt.show()
 
 
 # In[ ]:
@@ -350,23 +386,12 @@ print(len(testOverallArr))
 
 
 
-# AVERAGING 
-# 5 validation: 0.88720703125
+# AVERAGING on moons
+# 5 validation:
 # 20 validation: 0.90478515625
 # 50 validation: 0.9033203125
 # 100 validation: 0.8984375
-# 200 validation: 0.91064453125
-# 300 validation: 0.90283203125
-
-
-
-#ISOLET (10 subclasses 50 bin)
-# no validation:  0.924951892239
-# 20 validation: 
-
-
-
-
+# 200 validation: 
 
 
 
