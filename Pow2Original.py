@@ -1,5 +1,5 @@
 '''
-This file runs retraining normally but also gets an accuracy on the testing data after each retraining to give us an idea of the changes during retraining. It is not the correct computing file.
+This model is meant to allow bitshifting by converting HV to powers of 2. It is a WIP.
 '''
 
 # coding: utf-8
@@ -14,7 +14,7 @@ import time
 import scipy
 import scipy.cluster
 import sklearn.preprocessing
-
+from scipy.special import xlogy
 
 # In[18]:
 
@@ -115,7 +115,9 @@ def spliceData (fileName):
         array = np.vstack((array, data)) #adds a new row to array
     f.close()
     
-
+    #array[:, 0:(len(array[0])-1)] = sklearn.preprocessing.normalize(array[:, 0:(len(array[0])-1)], axis = 1)
+    
+    print(array) 
     
     return numFeatures, numClasses, array
     
@@ -162,68 +164,64 @@ def kmeans(array, numSubClasses):
 def unpickle(fileName):
     with open(fileName, 'rb') as handle:
         featureArr = pickle.load(handle)
-        featureArr = np.array(featureArr)
+        featureArr = np.asarray(featureArr)
         numFeatures = len(featureArr[0,:])
         classArr = pickle.load(handle)
-        classArr = np.array(classArr)
+        classArr = np.asarray(classArr)
         numClasses = len(set(classArr))
         arr = np.c_[featureArr, classArr]
+        
     return numFeatures, numClasses, arr
 
+#Change all values in array to powers of 2
+def changePowers(array):
+  sign = np.sign(array)
+  array = np.absolute(array)
+  array = xlogy(np.sign(array), array) / np.log(2)
+  array = np.round(array)
+  #creates a new array with same shape as array, all filled with powers of 2
+  a = np.full(array.shape, 2)
+  array = np.power(a, array)
+  array = array*sign
+
+  return array
 
 # In[22]:
 
-trainingFile = 'IRISPickles/iris_train.pickle'
-testingFile = 'IRISPickles/iris_test.pickle'
-#trainingFile = 'PAGEPickles/page_train.pickle'
-#testingFile = 'PAGEPickles/page_test.pickle'
-#trainingFile = 'SHUTTLEPickles/shuttle_train.pickle'
-#testingFile = 'SHUTTLEPickles/shuttle_test.pickle'
-#trainingFile = 'CARDIOPickles/cc_train.pickle'
-#testingFile = 'CARDIOPickles/cc_test.pickle'
-#trainingFile = 'MNISTPickles/mnist_train.pickle'
-#testingFile = 'MNISTPickles/mnist_test.pickle'
 #trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
 #testingFile = 'ISOLETPickles/ISOLET_test.pickle'
-trainingFile = 'PAMPA2Pickles/PAMPA2_train.pickle'
-testingFile = 'PAMPA2Pickles/PAMPA2_test.pickle'
+#trainingFile = 'PAMPA2Pickles/PAMPA2_train.pickle'
+#testingFile = 'PAMPA2Pickles/PAMPA2_test.pickle'
 #trainingFile = 'UCIHARPickles/sa_train.pickle'
 #testingFile = 'UCIHARPickles/sa_test.pickle'
-#trainingFile = 'moons/moons_2048_train.txt'
-#testingFile = 'moons/moons_2048_test.txt'
+trainingFile = 'moons/moons_2048_train.txt'
+testingFile = 'moons/moons_2048_test.txt'
 #trainingFile = "blob_train.txt"
 #testingFile = "blob_test.txt"
-#trainingFile = "FACEPickles/train.pickle"
-#testingFile = "FACEPickles/test.pickle"
+#trainingFile = "FACEPickles/face_train.pickle"
+#testingFile = "FACEPickles/face_test.pickle"
 #input()
 
 
 # In[23]:
 
 #number of features, classes, and array of all values
-F, C, overallArr = unpickle(trainingFile)
-print(overallArr[:100,:100])
-overallArr[:, 0:(len(overallArr[0])-1)] = sklearn.preprocessing.normalize(overallArr[:, 0:(len(overallArr[0])-1)], axis = 1)
+F, C, overallArr = spliceData(trainingFile)
 
-print(overallArr[:100,:100])
-
-overallArr = overallArr[:int(len(overallArr)/10)]
-
-numSubClasses = 1
-BIN_NUM = 1000
+numSubClasses = 2
+BIN_NUM = 20
 FLIP_NUM = 50
-numValidation = 10
+numValidation = 20
 
 
 #the feature hypervector
 featureHV = genFeatureHV(F)
-
 classHV = genClassHV(C, numSubClasses)
 
 arrNumRows = len(overallArr)
 arrNumCols = len(overallArr[0,:])
 
-print "Successful unpickle of with ", trainingFile, numSubClasses, " subclasses and ", numValidation, " retraining."
+print "Successful unpickle with ", numSubClasses, " subclasses and ", numValidation, " retraining."
 
 
 # In[24]:
@@ -233,7 +231,6 @@ print "Successful unpickle of with ", trainingFile, numSubClasses, " subclasses 
 # the process of changing from values (floats) to ints that represent what bin theyre in
 levelHV = np.zeros([F, BIN_NUM, 10000])
 copyOverallArr = overallArr.copy()
-
 for i in range(0, arrNumCols - 1):
     bins = createBins(BIN_NUM, overallArr, i)
     #test for different range values that cause column sizes to be different
@@ -242,6 +239,7 @@ for i in range(0, arrNumCols - 1):
     overallArr[:arrNumRows, i] = np.digitize(feature1,bins) - 1 
 overallArr = overallArr.astype(int) 
 print("Done encoding")
+
 
 # In[25]:
 
@@ -264,7 +262,8 @@ for i in range(0, len(classHV)):
             
             #classHV[class, subclass]
             classHV[i, label[j]] = classHV[i, label[j]] + productOne 
-    
+
+classHV = changePowers(classHV)    
 print("Done creating classHV")
 
 
@@ -274,14 +273,10 @@ print("Done creating classHV")
 
 # starting to test data, get data into overalltestarray, with fourth column of 0 for false and 1 for true
 #number of features, classes, and array of all values
-testF, testC, testOverallArr = unpickle(testingFile)
+testF, testC, testOverallArr = spliceData(testingFile)
     
-testOverallArr[:, 0:(len(testOverallArr[0])-1)] = sklearn.preprocessing.normalize(testOverallArr[:, 0:(len(testOverallArr[0])-1)], axis = 1)
-
-testOverallArr = testOverallArr[:int(len(testOverallArr)/10)]
 testArrNumRows = len(testOverallArr)
 testArrNumCols = len(testOverallArr[0,:])
-
 
 
 # the process of changing from values (floats) to ints that represent what bin theyre in
@@ -291,8 +286,7 @@ for i in range(0, testArrNumCols - 1):
 
 testOverallArr = testOverallArr.astype(int)
 
-
-print("Done reading test data from ", testingFile)
+print("Done reading test data")
 
 
 # In[27]:
@@ -306,9 +300,10 @@ for i in range(0, len(overallArr)):
     levelOne = levelHV[j, overallArr[i, j]]
     productOne = levelOne * featureHV[j]
     queryHV = queryHV + productOne
-
+  
   trainQueryHV[i] = queryHV
 
+trainQueryHV = changePowers(trainQueryHV)
 
 testQueryHV = np.zeros([testArrNumRows, 10000])
 # encodes each test HV
@@ -320,6 +315,8 @@ for i in range(0, testArrNumRows):
     queryHV = queryHV + productOne
     
   testQueryHV[i] = queryHV
+
+testQueryHV = changePowers(testQueryHV)
 
 print("Done creating encoded train/test HV")
 
@@ -350,9 +347,9 @@ for k in range(numValidation):
     Y[k] = np.sum(accuracy)/float(len(testOverallArr))
    
     classHV = retrain(classHV, trainQueryHV, levelHV, featureHV, numSubClasses) 
-
+    classHV = changePowers(classHV)
     #classHV = (classHV +  retrain(classHV, trainQueryHV, levelHV, featureHV, numSubClasses))/2
-    
+
     print(k)
 
 

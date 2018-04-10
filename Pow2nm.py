@@ -175,18 +175,47 @@ def unpickle(fileName):
 
 #Change all values in array to powers of 2
 def changePowers(array):
+  # Save signs and then perform masked log 
+  sign = np.sign(array)
+  arrayN = np.absolute(array)
+
+  # Fill masked places with 0 and divide by log2 (log math) 
+  arrayN = np.ma.log(arrayN)
+  arrayN = arrayN.filled(0) 
+  arrayN = arrayN / np.log(2)
+
+  arrayN = np.round(arrayN) 
+
+  # Raise 2 to the power of arrayN (2^n) and redistribute signs
+  arrayof2 = np.full(arrayN.shape, 2)
+  arrayN = np.power(arrayof2, arrayN)
+  arrayN = arrayN*sign
+
+
+  # Repeat for the difference in array and arrayN
+  array = array - arrayN
   sign = np.sign(array)
   array = np.absolute(array)
-  array = xlogy(np.sign(array), array) / np.log(2)
+  
+  # Masked log and refill
+  array = np.ma.log(array)
+  array = array.filled(0)
+  array = array / np.log(2)
+  
   array = np.round(array)
-  #creates a new array with same shape as array, all filled with powers of 2
-  a = np.full(array.shape, 2)
-  array = np.power(a, array)
+
+  # Raise 2 to the power of arrayN (2^n) and redistribute signs
+  array = np.power(arrayof2, array)
   array = array*sign
 
+  array = arrayN + array
   return array
 
-# In[22]:
+#############################################################################
+######################  END OF METHODS #####################################
+############################################################################
+
+
 
 #trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
 #testingFile = 'ISOLETPickles/ISOLET_test.pickle'
@@ -203,15 +232,13 @@ testingFile = "FACEPickles/face_test.pickle"
 #input()
 
 
-# In[23]:
-
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 2
+numSubClasses = 1
 BIN_NUM = 20
 FLIP_NUM = 50
-numValidation = 20
+numValidation = 40
 
 
 #the feature hypervector
@@ -230,7 +257,6 @@ print "Successful unpickle with ", numSubClasses, " subclasses and ", numValidat
 
 # the process of changing from values (floats) to ints that represent what bin theyre in
 levelHV = np.zeros([F, BIN_NUM, 10000])
-copyOverallArr = overallArr.copy()
 for i in range(0, arrNumCols - 1):
     bins = createBins(BIN_NUM, overallArr, i)
     #test for different range values that cause column sizes to be different
@@ -263,7 +289,8 @@ for i in range(0, len(classHV)):
             #classHV[class, subclass]
             classHV[i, label[j]] = classHV[i, label[j]] + productOne 
 
-classHV = changePowers(classHV)    
+
+classHV = changePowers(classHV)
 print("Done creating classHV")
 
 
@@ -303,7 +330,17 @@ for i in range(0, len(overallArr)):
   
   trainQueryHV[i] = queryHV
 
+
+a = overallArr[:, arrNumCols - 1].reshape(-1, 1)
+print(a.shape)
+del overallArr
 trainQueryHV = changePowers(trainQueryHV)
+
+trainQueryHV = np.c_[trainQueryHV, a]
+
+print(len(trainQueryHV[0]))
+
+
 
 testQueryHV = np.zeros([testArrNumRows, 10000])
 # encodes each test HV
@@ -322,12 +359,6 @@ print("Done creating encoded train/test HV")
 
 
 # In[28]:
-
-a = overallArr[:, arrNumCols - 1].reshape(-1, 1)
-print(a.shape)
-trainQueryHV = np.c_[trainQueryHV, a]
-
-print(len(trainQueryHV[0]))
 
 
 # In[ ]:
