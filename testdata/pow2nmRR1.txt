@@ -1,0 +1,7 @@
+Pow2nmRR: Successful unpickle with  1  subclasses and 
+50  retraining.
+Done encoding
+0
+1
+Done creating classHV
+Done reading test data

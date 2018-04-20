@@ -1,4 +1,8 @@
-
+''' 
+This powers of 2 program uses repeated retraining and basic 2^n rounding. 
+Repeated retraining means that during our retrianing process, we do not move
+onto a new sample point until the previous point is classified correctly
+'''
 # coding: utf-8
 
 # In[17]:
@@ -12,6 +16,7 @@ import scipy
 import scipy.cluster
 import sklearn.preprocessing
 from scipy.special import xlogy
+import sys
 
 # In[18]:
 
@@ -136,7 +141,6 @@ def findAccuracy(cosVals, testOverallArr, testArrNumCols, i, numSubClasses):
     maxVal = int(np.argmax(cosVals))
     classNum = int(maxVal / numSubClasses)
     
-    #TODO
     #print(classNum, int(testOverallArr[i,testArrNumCols - 1]))
     if classNum == int(testOverallArr[i,testArrNumCols - 1]):
         return 1
@@ -175,7 +179,10 @@ def unpickle(fileName):
 def changePowers(array): 
   sign = np.sign(array)
   array = np.absolute(array)
-  array = xlogy(np.sign(array), array) / np.log(2)
+  array = np.ma.log(array)
+  array = array.filled(0) 
+  array = array / np.log(2)
+
   array = np.round(array)
   #creates a new array with same shape as array, all filled with powers of 2
   a = np.full(array.shape, 2)
@@ -185,32 +192,37 @@ def changePowers(array):
   return array
 
 
-# In[22]:
+############################################################################
+######################### END OF METHODS ##################################
+###########################################################################
 
-#trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
-#testingFile = 'ISOLETPickles/ISOLET_test.pickle'
+
+#trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
+#testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
 #trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
 #testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
-#trainingFile = 'UCIHARPickles/sa_train.pickle'
-#testingFile = 'UCIHARPickles/sa_test.pickle'
-#trainingFile = 'moons/moons_2048_train.txt'
-#testingFile = 'moons/moons_2048_test.txt'
-#trainingFile = "blob_train.txt"
-#testingFile = "blob_test.txt"
-trainingFile = "FACEPickles/face_train.pickle"
-testingFile = "FACEPickles/face_test.pickle"
-#input()
+#trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
+#testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
+#trainingFile = 'dataset/moons/moons_2048_train.txt'
+#testingFile = 'dataset/moons/moons_2048_test.txt'
+#trainingFile = "dataset/blob_train.txt"
+#testingFile = "dataset/blob_test.txt"
+trainingFile = "dataset/FACEPickles/face_train.pickle"
+testingFile = "dataset/FACEPickles/face_test.pickle"
 
 
-# In[23]:
+
+
 
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 1
+numSubClasses = 2
+#int(sys.argv[1])
 BIN_NUM = 20
 FLIP_NUM = 50
 numValidation = 50
+#int(sys.argv[2])
 
 
 #the feature hypervector

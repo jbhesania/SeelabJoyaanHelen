@@ -1,5 +1,7 @@
 ''' 
-This is our final version of the retraining and subclasses model. It involves using a changeable number of clusters for subclasses and performs normal retraining, adding and removing from the subclasses (not all the HV in a class)
+This is our final version of the retraining and subclasses model. It involves
+using a changeable number of clusters for subclasses and performs normal
+retraining, adding and removing from the subclasses (not all the HV in a class)
 '''
 
 # coding: utf-8
@@ -15,7 +17,7 @@ import time
 import scipy
 import scipy.cluster
 import sklearn.preprocessing
-
+import sys
 
 # In[2]:
 
@@ -142,7 +144,6 @@ def findAccuracy(cosVals, testOverallArr, testArrNumCols, i, numSubClasses):
     maxVal = int(np.argmax(cosVals))
     classNum = int(maxVal / numSubClasses)
     
-    #TODO
     #print(classNum, int(testOverallArr[i,testArrNumCols - 1]))
     if classNum == int(testOverallArr[i,testArrNumCols - 1]):
         return 1
@@ -178,33 +179,36 @@ def unpickle(fileName):
     return numFeatures, numClasses, arr
 
 
-# In[6]:
+##############################################################################
+######################### END OF METHODS ##################################
+###########################################################################
+
 
 #trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
 #testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
 #trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
 #testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
-trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
-testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
+#trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
+#testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
 #trainingFile = 'dataset/moons/moons_2048_train.txt'
 #testingFile = 'dataset/moons/moons_2048_test.txt'
-#trainingFile = "blob_train.txt"
-#testingFile = "blob_test.txt"
-#trainingFile = "dataset/face/train.pickle"
-#testingFile = "dataset/face/test.pickle"
-#input()
+#trainingFile = "dataset/blob_train.txt"
+#testingFile = "dataset/blob_test.txt"
+trainingFile = "dataset/FACEPickles/face_train.pickle"
+testingFile = "dataset/FACEPickles/face_test.pickle"
 
 
-# In[7]:
+
+
 
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
 
-numSubClasses = 2
+numSubClasses = int(sys.argv[1])
 BIN_NUM = 20
 FLIP_NUM = 50
-numValidation = 50
+numValidation = int(sys.argv[2])
 
 #the feature hypervector
 featureHV = genFeatureHV(F)
@@ -278,7 +282,7 @@ print("Done creating classHV")
 
 print("Retrainings out of " + str(numValidation))
 for i in range(0, numValidation):
-    print(i, end=' ')
+    print(i)
     classHV = (classHV + retrain(classHV, copyOverallArr, levelHV, featureHV, numSubClasses))/2
 print("Done with retraining")
 

@@ -15,6 +15,8 @@ import scipy
 import scipy.cluster
 import sklearn.preprocessing
 from scipy.special import xlogy
+import sys
+
 
 # In[18]:
 
@@ -184,7 +186,7 @@ def changePowers(array):
   arrayN = arrayN.filled(0) 
   arrayN = arrayN / np.log(2)
 
-  arrayN = np.round(arrayN) 
+  arrayN = np.trunc(arrayN) 
 
   # Raise 2 to the power of arrayN (2^n) and redistribute signs
   arrayof2 = np.full(arrayN.shape, 2)
@@ -216,29 +218,31 @@ def changePowers(array):
 ############################################################################
 
 
-
-#trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
-#testingFile = 'ISOLETPickles/ISOLET_test.pickle'
-#trainingFile = 'PAMPA2Pickles/PAMPA2_train.pickle'
-#testingFile = 'PAMPA2Pickles/PAMPA2_test.pickle'
-#trainingFile = 'UCIHARPickles/sa_train.pickle'
-#testingFile = 'UCIHARPickles/sa_test.pickle'
-#trainingFile = 'moons/moons_2048_train.txt'
-#testingFile = 'moons/moons_2048_test.txt'
-#trainingFile = "blob_train.txt"
-#testingFile = "blob_test.txt"
-trainingFile = "FACEPickles/face_train.pickle"
-testingFile = "FACEPickles/face_test.pickle"
-#input()
+#trainingFile = 'dataset/IRISPickles/iris_train.pickle'
+#testingFile = 'dataset/IRISPickles/iris_test.pickle'
+#trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
+#testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
+#trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
+#testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
+#trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
+#testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
+#trainingFile = 'dataset/moons/moons_2048_train.txt'
+#testingFile = 'dataset/moons/moons_2048_test.txt'
+#trainingFile = "dataset/blob_train.txt"
+#testingFile = "dataset/blob_test.txt"
+trainingFile = "dataset/FACEPickles/face_train.pickle"
+testingFile = "dataset/FACEPickles/face_test.pickle"
 
 
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 1
+numSubClasses = 64
+#int(sys.argv[1])
 BIN_NUM = 20
 FLIP_NUM = 50
-numValidation = 40
+numValidation = 50
+#int(sys.argv[2])
 
 
 #the feature hypervector
@@ -333,14 +337,9 @@ for i in range(0, len(overallArr)):
 
 a = overallArr[:, arrNumCols - 1].reshape(-1, 1)
 print(a.shape)
-del overallArr
 trainQueryHV = changePowers(trainQueryHV)
 
 trainQueryHV = np.c_[trainQueryHV, a]
-
-print(len(trainQueryHV[0]))
-
-
 
 testQueryHV = np.zeros([testArrNumRows, 10000])
 # encodes each test HV

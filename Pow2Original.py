@@ -15,6 +15,7 @@ import scipy
 import scipy.cluster
 import sklearn.preprocessing
 from scipy.special import xlogy
+import sys
 
 # In[18]:
 
@@ -177,7 +178,10 @@ def unpickle(fileName):
 def changePowers(array):
   sign = np.sign(array)
   array = np.absolute(array)
-  array = xlogy(np.sign(array), array) / np.log(2)
+  array = np.ma.log(array)
+  array = array.filled(0) 
+  array = array / np.log(2)
+
   array = np.round(array)
   #creates a new array with same shape as array, all filled with powers of 2
   a = np.full(array.shape, 2)
@@ -186,32 +190,39 @@ def changePowers(array):
 
   return array
 
-# In[22]:
-
-#trainingFile = 'ISOLETPickles/ISOLET_train.pickle'
-#testingFile = 'ISOLETPickles/ISOLET_test.pickle'
-#trainingFile = 'PAMPA2Pickles/PAMPA2_train.pickle'
-#testingFile = 'PAMPA2Pickles/PAMPA2_test.pickle'
-#trainingFile = 'UCIHARPickles/sa_train.pickle'
-#testingFile = 'UCIHARPickles/sa_test.pickle'
-trainingFile = 'moons/moons_2048_train.txt'
-testingFile = 'moons/moons_2048_test.txt'
-#trainingFile = "blob_train.txt"
-#testingFile = "blob_test.txt"
-#trainingFile = "FACEPickles/face_train.pickle"
-#testingFile = "FACEPickles/face_test.pickle"
-#input()
 
 
-# In[23]:
+###########################################################################
+######################### END OF METHODS ##################################
+###########################################################################
+
+
+#trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
+#testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
+#trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
+#testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
+#trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
+#testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
+#trainingFile = 'dataset/moons/moons_2048_train.txt'
+#testingFile = 'dataset/moons/moons_2048_test.txt'
+#trainingFile = "dataset/blob_train.txt"
+#testingFile = "dataset/blob_test.txt"
+trainingFile = "dataset/FACEPickles/face_train.pickle"
+testingFile = "dataset/FACEPickles/face_test.pickle"
+
+
+
+
 
 #number of features, classes, and array of all values
-F, C, overallArr = spliceData(trainingFile)
+F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 2
+numSubClasses = 1 
+#int(sys.argv[1])
 BIN_NUM = 20
 FLIP_NUM = 50
-numValidation = 20
+numValidation = 50
+#int(sys.argv[2])
 
 
 #the feature hypervector
@@ -273,7 +284,7 @@ print("Done creating classHV")
 
 # starting to test data, get data into overalltestarray, with fourth column of 0 for false and 1 for true
 #number of features, classes, and array of all values
-testF, testC, testOverallArr = spliceData(testingFile)
+testF, testC, testOverallArr = unpickle(testingFile)
     
 testArrNumRows = len(testOverallArr)
 testArrNumCols = len(testOverallArr[0,:])

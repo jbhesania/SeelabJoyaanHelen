@@ -1,0 +1,6 @@
+Successful unpickle with  2  subclasses and  50  retraining.
+Done encoding
+0
+1
+Done creating classHV
+Done reading test data
