@@ -283,7 +283,7 @@ print("Done creating classHV")
 print("Retrainings out of " + str(numValidation))
 for i in range(0, numValidation):
     print(i)
-    classHV = (classHV + retrain(classHV, copyOverallArr, levelHV, featureHV, numSubClasses))/2
+    classHV = retrain(classHV, copyOverallArr, levelHV, featureHV, numSubClasses)
 print("Done with retraining")
 
 

@@ -223,8 +223,8 @@ def changePowers(array):
 
 #trainingFile = 'dataset/IRISPickles/iris_train.pickle'
 #testingFile = 'dataset/IRISPickles/iris_test.pickle'
-#trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
-#testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
+#trainingFile = 'dataset/ISOLETPickles/isolet_train.pickle'
+#testingFile = 'dataset/ISOLETPickles/isolet_test.pickle'
 #trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
 #testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
 #trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
@@ -243,7 +243,7 @@ testingFile = "dataset/FACEPickles/face_test.pickle"
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 1
+numSubClasses = 64
 #int(sys.argv[1])
 BIN_NUM = 20
 FLIP_NUM = 50
@@ -269,7 +269,6 @@ print numValidation, " retraining."
 
 # the process of changing from values (floats) to ints that represent what bin theyre in
 levelHV = np.zeros([F, BIN_NUM, 10000])
-copyOverallArr = overallArr.copy()
 for i in range(0, arrNumCols - 1):
     bins = createBins(BIN_NUM, overallArr, i)
     #test for different range values that cause column sizes to be different

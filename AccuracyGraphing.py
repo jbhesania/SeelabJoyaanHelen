@@ -197,17 +197,11 @@ testingFile = "dataset/FACEPickles/face_test.pickle"
 
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
-print(overallArr[:100,:100])
-overallArr[:, 0:(len(overallArr[0])-1)] = sklearn.preprocessing.normalize(overallArr[:, 0:(len(overallArr[0])-1)], axis = 1)
-
-print(overallArr[:100,:100])
-
-overallArr = overallArr[:int(len(overallArr)/10)]
 
 numSubClasses = 1
 BIN_NUM = 1000
 FLIP_NUM = 50
-numValidation = 10
+numValidation = 50
 
 
 #the feature hypervector

@@ -220,24 +220,24 @@ def changePowers(array):
 
 #trainingFile = 'dataset/IRISPickles/iris_train.pickle'
 #testingFile = 'dataset/IRISPickles/iris_test.pickle'
-#trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
-#testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
+#trainingFile = 'dataset/ISOLETPickles/isolet_train.pickle'
+#testingFile = 'dataset/ISOLETPickles/isolet_test.pickle'
 #trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
 #testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
-#trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
-#testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
+trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
+testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
 #trainingFile = 'dataset/moons/moons_2048_train.txt'
 #testingFile = 'dataset/moons/moons_2048_test.txt'
 #trainingFile = "dataset/blob_train.txt"
 #testingFile = "dataset/blob_test.txt"
-trainingFile = "dataset/FACEPickles/face_train.pickle"
-testingFile = "dataset/FACEPickles/face_test.pickle"
+#trainingFile = "dataset/FACEPickles/face_train.pickle"
+#testingFile = "dataset/FACEPickles/face_test.pickle"
 
 
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 64
+numSubClasses = 16
 #int(sys.argv[1])
 BIN_NUM = 20
 FLIP_NUM = 50

@@ -242,7 +242,6 @@ print "Successful unpickle with ", numSubClasses, " subclasses and ", numValidat
 
 # the process of changing from values (floats) to ints that represent what bin theyre in
 levelHV = np.zeros([F, BIN_NUM, 10000])
-copyOverallArr = overallArr.copy()
 for i in range(0, arrNumCols - 1):
     bins = createBins(BIN_NUM, overallArr, i)
     #test for different range values that cause column sizes to be different
@@ -274,7 +273,7 @@ for i in range(0, len(classHV)):
             
             #classHV[class, subclass]
             classHV[i, label[j]] = classHV[i, label[j]] + productOne 
-classHV = classHV / 100
+#classHV = classHV / 100
 classHV = changePowers(classHV)    
 print("Done creating classHV")
 
