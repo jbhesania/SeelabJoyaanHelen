@@ -237,7 +237,7 @@ testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
 
-numSubClasses = 16
+numSubClasses = 1
 #int(sys.argv[1])
 BIN_NUM = 20
 FLIP_NUM = 50

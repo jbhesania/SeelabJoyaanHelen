@@ -372,7 +372,6 @@ print(np.sum(accuracy)/len(testOverallArr))
 print(len(testOverallArr))
 print(Y)
 
-# In[ ]:
 
 #import matplotlib.pyplot as plt
 #plt.plot(Y)

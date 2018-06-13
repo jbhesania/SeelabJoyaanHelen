@@ -1,0 +1,2 @@
+Successful unpickle of with  dataset/ISOLETPickles/isolet_train.pickle 1  subclasses and  50  retraining.
+Successful unpickle of with  dataset/UCIHARPickles/sa_train.pickle 1  subclasses and  50  retraining.

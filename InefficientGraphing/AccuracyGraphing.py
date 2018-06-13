@@ -187,14 +187,14 @@ def unpickle(fileName):
 #testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
 #trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
 #testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
-#trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
-#testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
+trainingFile = '../dataset/UCIHARPickles/sa_train.pickle'
+testingFile = '../dataset/UCIHARPickles/sa_test.pickle'
 #trainingFile = 'dataset/moons/moons_2048_train.txt'
 #testingFile = 'dataset/moons/moons_2048_test.txt'
 #trainingFile = "dataset/blob_train.txt"
 #testingFile = "dataset/blob_test.txt"
-trainingFile = "../dataset/FACEPickles/face_train.pickle"
-testingFile = "../dataset/FACEPickles/face_test.pickle"
+#trainingFile = "../dataset/FACEPickles/face_train.pickle"
+#testingFile = "../dataset/FACEPickles/face_test.pickle"
 
 
 

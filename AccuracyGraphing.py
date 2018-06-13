@@ -1,19 +1,13 @@
 '''
-This file runs retraining normally but also gets an accuracy on the testing data after each retraining to give us an idea of the changes during retraining. It is not the correct computing file.
+This file runs retraining normally but also gets an accuracy on the testing data after each retraining to give us an idea of the changes during retraining. 
+It is not the correct computing file.
 '''
-
-# coding: utf-8
-
-# In[17]:
-
 import numpy as np
 import random
 import pickle
 from numpy import linalg as li
-import time
 import scipy
 import scipy.cluster
-import sklearn.preprocessing
 
 
 # In[18]:
@@ -25,7 +19,7 @@ def genRandomHV(D):
         print("Dimension is odd.")
     else:
         hv = np.random.permutation(D) #create a sequence with random values from 0 to D
-        for x in range(D):
+        for x in range(D): #all values in hypervector will be either -1 or 1
             if hv[x] < D/2:
                 hv[x] = -1
             else:
@@ -39,7 +33,7 @@ def genFeatureHV(D):
         arr[i] = genRandomHV(10000)
     return arr
 
-# creates G levels between a and b; level hypervectors
+# creates g levels between a and b; creates a level hypervector
 # z is number of bits to flip
 def genLevelHV(g, z):
     arr = np.empty([g, 10000])
@@ -60,9 +54,11 @@ def genClassHV(D, numSubClasses):
     arr = np.zeros([D, numSubClasses, 10000])
     return arr
 
+#finds the min and max value of the array A
 def findMinMax(A):
     return int(round(max(A))), int(round(min(A)))
 
+#creates bins; used when creating the class HVs
 def createBins(BIN_NUM, arr, i):
     maxValue, minValue = findMinMax(arr[:, i])
     bins = []
@@ -70,11 +66,7 @@ def createBins(BIN_NUM, arr, i):
             bins = np.append(bins, minValue + (float(maxValue-minValue)/BIN_NUM)*j)
     return bins
 
-
-# In[30]:
-
 #if guessed wrong, subtract from wrong hypervector, add to correct hypervector
-#repeat until accepted accuracy
 def retrain(classHV, testArr, levelHV, featureHV, numSubClasses):
     numCol = len(testArr[0,:])  
     for i in range (0, len(testArr)):
@@ -82,6 +74,7 @@ def retrain(classHV, testArr, levelHV, featureHV, numSubClasses):
         cosVals = cosineSimilarity(classHV, queryHV)
         x = findAccuracy(cosVals, testArr, numCol, i, numSubClasses)
         if x is 0:
+            #finds correct subclass HV
             maxVal = int(np.argmax(cosVals))
             classNum = int(maxVal / numSubClasses)
             subClassNum = int(maxVal % numSubClasses)
@@ -99,7 +92,8 @@ def retrain(classHV, testArr, levelHV, featureHV, numSubClasses):
             
                  
     return classHV
-    
+   
+#reads in unpickled/regular files of a specific format
 def spliceData (fileName):
     f = open(fileName, "r")
     numFeatures = int(f.readline())
@@ -136,15 +130,10 @@ def findAccuracy(cosVals, testOverallArr, testArrNumCols, i, numSubClasses):
     maxVal = int(np.argmax(cosVals))
     classNum = int(maxVal / numSubClasses)
     
-    #TODO
-    #print(classNum, int(testOverallArr[i,testArrNumCols - 1]))
     if classNum == int(testOverallArr[i,testArrNumCols - 1]):
         return 1
     else:
         return 0
-
-
-# In[20]:
 
 #uses kmeans method on given array, which will all be of the same class
 #adds hypervectors to destined class hypervector
@@ -155,9 +144,6 @@ def kmeans(array, numSubClasses):
     #'random', 'points', 'uniform'
     centroid, label = scipy.cluster.vq.kmeans2(array, numSubClasses, minit='points')
     return label
-
-
-# In[21]:
 
 def unpickle(fileName):
     with open(fileName, 'rb') as handle:
@@ -170,33 +156,28 @@ def unpickle(fileName):
         arr = np.c_[featureArr, classArr]
     return numFeatures, numClasses, arr
 
-
-
-
-
 ###########################################################################
 ######################### END OF METHODS ##################################
 ###########################################################################
 
+#all datasets used for training and testing
 
-#trainingFile = 'dataset/ISOLETPickles/ISOLET_train.pickle'
-#testingFile = 'dataset/ISOLETPickles/ISOLET_test.pickle'
+#trainingFile = 'dataset/ISOLETPickles/isolet_train.pickle'
+#testingFile = 'dataset/ISOLETPickles/isolet_test.pickle'
 #trainingFile = 'dataset/PAMPA2Pickles/PAMPA2_train.pickle'
 #testingFile = 'dataset/PAMPA2Pickles/PAMPA2_test.pickle'
-#trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
-#testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
+trainingFile = 'dataset/UCIHARPickles/sa_train.pickle'
+testingFile = 'dataset/UCIHARPickles/sa_test.pickle'
 #trainingFile = 'dataset/moons/moons_2048_train.txt'
 #testingFile = 'dataset/moons/moons_2048_test.txt'
 #trainingFile = "dataset/blob_train.txt"
 #testingFile = "dataset/blob_test.txt"
-trainingFile = "dataset/FACEPickles/face_train.pickle"
-testingFile = "dataset/FACEPickles/face_test.pickle"
-
-
-
+#trainingFile = "dataset/FACEPickles/face_train.pickle"
+#testingFile = "dataset/FACEPickles/face_test.pickle"
 
 #number of features, classes, and array of all values
 F, C, overallArr = unpickle(trainingFile)
+
 
 numSubClasses = 1
 BIN_NUM = 1000
@@ -215,8 +196,6 @@ arrNumCols = len(overallArr[0,:])
 print "Successful unpickle of with ", trainingFile, numSubClasses, " subclasses and ", numValidation, " retraining."
 
 
-# In[24]:
-
 #READING THE DATA
 
 # the process of changing from values (floats) to ints that represent what bin theyre in
@@ -231,8 +210,6 @@ for i in range(0, arrNumCols - 1):
     overallArr[:arrNumRows, i] = np.digitize(feature1,bins) - 1 
 overallArr = overallArr.astype(int) 
 print("Done encoding")
-
-# In[25]:
 
 #CREATING THE CLASS HVs
 for i in range(0, len(classHV)):
@@ -257,21 +234,14 @@ for i in range(0, len(classHV)):
 print("Done creating classHV")
 
 
-# In[26]:
-
 ################## reading the testing data ####################
 
 # starting to test data, get data into overalltestarray, with fourth column of 0 for false and 1 for true
 #number of features, classes, and array of all values
 testF, testC, testOverallArr = unpickle(testingFile)
-    
-testOverallArr[:, 0:(len(testOverallArr[0])-1)] = sklearn.preprocessing.normalize(testOverallArr[:, 0:(len(testOverallArr[0])-1)], axis = 1)
-
-testOverallArr = testOverallArr[:int(len(testOverallArr)/10)]
+testOverallArr = testOverallArr[:int(len(testOverallArr)]
 testArrNumRows = len(testOverallArr)
 testArrNumCols = len(testOverallArr[0,:])
-
-
 
 # the process of changing from values (floats) to ints that represent what bin theyre in
 for i in range(0, testArrNumCols - 1):
@@ -283,8 +253,6 @@ testOverallArr = testOverallArr.astype(int)
 
 print("Done reading test data from ", testingFile)
 
-
-# In[27]:
 
 #Creates all query HV for training dataset and testing dataset
 
@@ -313,17 +281,13 @@ for i in range(0, testArrNumRows):
 print("Done creating encoded train/test HV")
 
 
-# In[28]:
-
+#finish creating trainQueryHV
 a = overallArr[:, arrNumCols - 1].reshape(-1, 1)
 print(a.shape)
 trainQueryHV = np.c_[trainQueryHV, a]
 
-print(len(trainQueryHV[0]))
 
-
-# In[ ]:
-
+#Y is an array holding all the accuracies of each version of the model after retraining
 Y = np.zeros([numValidation])
 print("Retrainings out of " + str(numValidation))
 for k in range(numValidation):
@@ -340,61 +304,13 @@ for k in range(numValidation):
    
     classHV = retrain(classHV, trainQueryHV, levelHV, featureHV, numSubClasses) 
 
-    #classHV = (classHV +  retrain(classHV, trainQueryHV, levelHV, featureHV, numSubClasses))/2
-    
     print(k)
 
-
-
-# In[ ]:
 
 print(np.sum(accuracy), len(accuracy))
 print(np.sum(accuracy)/len(testOverallArr))
 print(len(testOverallArr))
 print(Y)
-
-# In[ ]:
-
-#import matplotlib.pyplot as plt
-#plt.plot(Y)
-#plt.show()
-
-
-# In[ ]:
-
-
-#VALIDATION TESTING on moons
-
-# 20 validation
-# without subtraction + add to all classHV: 0.7587890625
-# without subraction + only add to subclass: 0.74609375
-# with subtraction + add to all class HV : 0.8720703125
-# with subtraction from all + add to subclass: 0.7626953125
-# ****** with subtraction from all + add to all: 0.90478515625 ******
-
-# with subtraction from all + add to all
-# 50 validation: 0.8818359375
-# 100 validation: 0.90576171875
-
-
-
-# AVERAGING on moons
-# 5 validation:
-# 20 validation: 0.90478515625
-# 50 validation: 0.9033203125
-# 100 validation: 0.8984375
-# 200 validation: 
-
-
-
-
-
-
-
-
-
-
-
 
 
 
